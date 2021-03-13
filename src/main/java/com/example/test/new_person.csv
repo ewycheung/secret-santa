@@ -1,0 +1,5 @@
+AAA,a@example.com
+BBB,b@example.com,AAA
+CCC,c@example.com,
+DDD,d@example.com,AAA,BBB,CCC
+EEE,e@example.com,AAA,DDD
