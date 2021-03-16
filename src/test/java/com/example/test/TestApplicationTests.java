@@ -1,6 +1,7 @@
 package com.example.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ class TestApplicationTests {
 		actual4.setAssgined(true);
 
 		Person actual5 =  TestApplication.getApplicableAssignee(2, personList);
-		assertTrue("AAA".equals(actual5.getName()) || "BBB".equals(actual5.getName()) || "DDD".equals(actual4.getName()));
+		assertTrue(actual5 == null || "AAA".equals(actual5.getName()) || "BBB".equals(actual5.getName()) || "DDD".equals(actual4.getName()));
 		actual5.setAssgined(true);
 	}
 
