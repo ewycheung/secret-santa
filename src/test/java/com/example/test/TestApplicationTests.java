@@ -1,6 +1,7 @@
 package com.example.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,31 +13,35 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 class TestApplicationTests {	
-
+	
 	@Test
-	void isFound() {
-		// Test Case 1 - Random Index = Current Index => Should be false		
-		boolean actual1 = TestApplication.isFound(1, 1, null, null);
-		assertEquals(false, actual1);
+	void getApplicableAssignee() {
+		List<Person> personList = new ArrayList<>();
+		TestApplication.addPerson("AAA,a@example.com", personList);
+		TestApplication.addPerson("BBB,b@example.com,AAA", personList);
+		TestApplication.addPerson("CCC,c@example.com", personList);
+		TestApplication.addPerson("DDD,d@example.com,AAA,BBB,CCC", personList);
+		TestApplication.addPerson("EEE,e@example.com,AAA,DDD", personList);
 
-		// Test Case 2 - Assignee is being assiged to others => Should be false
-		Person assignee1 = new Person("AAA", "a@example.com");
-		assignee1.setAssgined(true);
-		boolean actual2 = TestApplication.isFound(1, 2, assignee1, null);
-		assertEquals(false, actual2);
+		Person actual1 = TestApplication.getApplicableAssignee(3, personList);
+		assertEquals("EEE", actual1.getName());
+		actual1.setAssgined(true);
 
-		// Test Case 3 - Assignee is excluded from Current => Should be false
-		Person assignee2 = new Person("AAA", "a@example.com");
-		Person current1 = new Person("BBB", "b@example.com");
-		current1.addExclusion("AAA");
-		boolean actual3 = TestApplication.isFound(1, 2, assignee2, current1);
-		assertEquals(false, actual3);
+		Person actual2 =  TestApplication.getApplicableAssignee(4, personList);
+		assertTrue("BBB".equals(actual2.getName()) || "CCC".equals(actual2.getName()));
+		actual2.setAssgined(true);
 
-		// Test Case 4 - Assignee is suitable to be assigned -> Should be true
-		Person assignee3 = new Person("AAA", "a@example.com");
-		Person current2 = new Person("BBB", "b@example.com");		
-		boolean actual4 = TestApplication.isFound(1, 2, assignee3, current2);
-		assertEquals(true, actual4);
+		Person actual3 =  TestApplication.getApplicableAssignee(1, personList);
+		assertTrue("DDD".equals(actual3.getName()) || "CCC".equals(actual3.getName()));
+		actual3.setAssgined(true);
+
+		Person actual4 =  TestApplication.getApplicableAssignee(0, personList);
+		assertTrue("BBB".equals(actual4.getName()) || "CCC".equals(actual4.getName()) || "DDD".equals(actual4.getName()));
+		actual4.setAssgined(true);
+
+		Person actual5 =  TestApplication.getApplicableAssignee(2, personList);
+		assertTrue("AAA".equals(actual5.getName()) || "BBB".equals(actual5.getName()) || "DDD".equals(actual4.getName()));
+		actual5.setAssgined(true);
 	}
 
 	@Test

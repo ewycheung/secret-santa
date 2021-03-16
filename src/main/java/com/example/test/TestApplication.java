@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.example.test.objects.Person;
@@ -16,30 +17,29 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class TestApplication {
+public class TestApplication {	
+	public static Person getApplicableAssignee(int currentPersonIndex, List<Person> personList) {
+		Person currPerson = personList.get(currentPersonIndex);
+		List<Person> filteredList = personList.stream()
+			.filter(p -> !currPerson.equals(p) && !p.getAssigned() && !currPerson.getExclusions().contains(p.getName()))
+			.collect(Collectors.toList());
+		Random rand = new Random();
 
-	public static boolean isFound(int int_random, int currentPersonIndex, Person assignee, Person currPerson) {
-		return int_random != currentPersonIndex && !assignee.getAssigned() && !currPerson.getExclusions().contains(assignee.getName());
+		if (filteredList.size() > 0) {
+			return filteredList.get(rand.nextInt(filteredList.size()));
+		} else {
+			return null;
+		}
 	}
 
 	private static void assignSecretSanta(int currentPersonIndex, List<Person> personList) {
-		Random rand = new Random();
-		boolean found = false;
-		int retry = 100;
+		Person assignee = getApplicableAssignee(currentPersonIndex, personList);
 
-		while (!found && retry > 0) {
-			int int_random = rand.nextInt(personList.size());
-			Person currPerson = personList.get(currentPersonIndex);
-			Person assignee = personList.get(int_random);
-
-			if (isFound(int_random, currentPersonIndex, assignee, currPerson)) {				
-				assignee.setAssgined(true);
-				currPerson.setAssigneeEmail(assignee.getEmail());
-				currPerson.setAssigneeName(assignee.getName());
-				found = true;
-			} else {
-				retry = retry - 1;
-			}
+		if (assignee != null) {
+			Person currPerson = personList.get(currentPersonIndex);			
+			assignee.setAssgined(true);
+			currPerson.setAssigneeEmail(assignee.getEmail());
+			currPerson.setAssigneeName(assignee.getName());
 		}
 	}
 
@@ -71,7 +71,7 @@ public class TestApplication {
 		SpringApplication.run(TestApplication.class, args);		
 		List<Person> personList = new ArrayList<>();
 		
-		Stream<String> lines = Files.lines(Paths.get("C:\\Java Projects\\test\\src\\main\\java\\com\\example\\test\\new_person.csv"));
+		Stream<String> lines = Files.lines(Paths.get("C:\\Java Projects\\secret-santa\\src\\main\\java\\com\\example\\test\\new_person.csv"));
 		lines.parallel().forEach(line -> addPerson(line, personList));				
 		lines.close();
 	
