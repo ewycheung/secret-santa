@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,26 +18,28 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class TestApplication {	
-	public static Person getApplicableAssignee(int currentPersonIndex, List<Person> personList) {
-		Person currPerson = personList.get(currentPersonIndex);
+public class TestApplication {
+	public static Predicate<Person> isAssignable(Person currPerson) {
+		return p -> !currPerson.equals(p) && !p.getAssigned() && !currPerson.getExclusions().contains(p.getName());
+	}
+
+	public static Person getApplicableAssignee(Person currPerson, List<Person> personList) {		
 		List<Person> filteredList = personList.stream()
-			.filter(p -> !currPerson.equals(p) && !p.getAssigned() && !currPerson.getExclusions().contains(p.getName()))
-			.collect(Collectors.toList());
-		Random rand = new Random();
+			.filter(isAssignable(currPerson))
+			.collect(Collectors.toList());		
 
 		if (filteredList.size() > 0) {
+			Random rand = new Random();
 			return filteredList.get(rand.nextInt(filteredList.size()));
 		} else {
 			return null;
 		}
 	}
 
-	private static void assignSecretSanta(int currentPersonIndex, List<Person> personList) {
-		Person assignee = getApplicableAssignee(currentPersonIndex, personList);
+	private static void assignSecretSanta(Person currPerson, List<Person> personList) {
+		Person assignee = getApplicableAssignee(currPerson, personList);
 
-		if (assignee != null) {
-			Person currPerson = personList.get(currentPersonIndex);			
+		if (assignee != null) {			
 			assignee.setAssgined(true);
 			currPerson.setAssigneeEmail(assignee.getEmail());
 			currPerson.setAssigneeName(assignee.getName());
@@ -54,11 +57,8 @@ public class TestApplication {
 
 	public static void assignSecretSantas(List<Person> personList) {
 		Comparator<Person> personComparator = Comparator.comparing(Person::getExclusionsSize).reversed();
-		Collections.sort(personList, personComparator);				
-				
-		for (int i = 0; i < personList.size(); i++) {
-			assignSecretSanta(i, personList);
-		}
+		Collections.sort(personList, personComparator);
+		personList.stream().forEach(p -> assignSecretSanta(p, personList));
 	}
 
 	private static void printResult(List<Person> personList) {
